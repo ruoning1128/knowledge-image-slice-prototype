@@ -1,0 +1,1572 @@
+<!doctype html>
+<!--
+prototype-meta:
+  name: 客服知识库图文切片能力
+  version: 1.1.4
+  last-modified: 2026-08-17
+  page-role: 知识库文档与切片运营
+  user-roles: 客服运营人员
+  state-machine: main -> upload | view -> search | hover | excel
+  key-flows: 文档筛选、DOCX上传、查看图文切片、URL搜索、图片预览、TXT与Excel导出
+  business-entities: 知识文档、知识切片、图片附件、业务分类
+  api-touch-points: 文档列表、文档上传、切片查询、导出任务
+  key-features:
+    - [x] 主表图片切片数
+    - [x] DOCX图片抽取提示
+    - [x] 图片URL截断与多图顺序
+    - [x] URL悬浮预览
+    - [x] 图片URL搜索
+    - [x] TXT与Excel导出示意
+    - [x] 左侧导航按现网截图校准
+    - [x] 一级导航图标上下结构与品牌标志修正
+    - [x] 一级导航按独立参考图像素级还原
+    - [x] Excel每张图片独占URL与预览单元格
+-->
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>客服知识库图文切片能力高保真原型</title>
+  <style>
+    :root {
+      --color-primary: #E1251B;
+      --color-link: #E37318;
+      --color-text: #262626;
+      --color-text-secondary: #595959;
+      --color-text-tertiary: #8C8C8C;
+      --color-border: #D9D9D9;
+      --color-divider: #E5E5E5;
+      --color-surface-soft: #FAFAFA;
+      --radius-md: 6px;
+      --control-height: 32px;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+      color: #262626;
+      background: #eef2f7;
+      font-size: 12px;
+      letter-spacing: 0;
+    }
+    button, input, select { font: inherit; }
+    .prototype-nav {
+      display: none;
+      height: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: #fff;
+      border-bottom: 1px solid #e7eaf0;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+    .prototype-nav strong { font-size: 14px; margin-right: 8px; }
+    .state-btn {
+      height: 30px;
+      border: 1px solid #dcdfe6;
+      background: #fff;
+      color: #4a4f57;
+      border-radius: 4px;
+      padding: 0 12px;
+      cursor: pointer;
+    }
+    .state-btn.active {
+      color: #e1251b;
+      border-color: #e1251b;
+      background: #fff5f4;
+    }
+    .screen { display: none; }
+    .screen.active { display: block; }
+    .app-frame {
+      min-width: 1440px;
+      height: 900px;
+      background: #f1f4f8;
+      position: relative;
+      overflow: hidden;
+    }
+    .topbar {
+      height: 50px;
+      background: #fff;
+      border-bottom: 1px solid #edf0f5;
+      display: flex;
+      align-items: center;
+      padding-left: 152px;
+      padding-right: 14px;
+      gap: 18px;
+    }
+    .project-select {
+      min-width: 164px;
+      height: 26px;
+      background: #fff3f2;
+      color: #d9231f;
+      border-radius: 4px;
+      padding: 6px 12px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .topbar-spacer { flex: 1; }
+    .notice-pill {
+      height: 26px;
+      border: 1px solid #f0a13a;
+      color: #8a4d06;
+      border-radius: 4px;
+      padding: 4px 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #fffdf9;
+    }
+    .top-link { color: #333; }
+    .avatar {
+      width: 22px;
+      height: 22px;
+      background: #e1251b;
+      color: #fff;
+      border-radius: 5px;
+      display: grid;
+      place-items: center;
+      font-weight: 500;
+    }
+    .brand-rail {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 56px;
+      background: #fff7f5;
+      border-right: 1px solid #f5e9e6;
+      padding-top: 0;
+      text-align: center;
+      z-index: 3;
+    }
+    .brand-logo {
+      height: 52px;
+      position: relative;
+      overflow: hidden;
+    }
+    .brand-logo-source {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 154px;
+      height: 740px;
+      max-width: none;
+      display: block;
+      pointer-events: none;
+    }
+    .primary-rail-reference {
+      position: absolute;
+      top: 52px;
+      left: 2px;
+      width: 51px;
+      height: 575px;
+      max-width: none;
+      display: block;
+      pointer-events: none;
+      user-select: none;
+    }
+    }
+    .rail-item {
+      height: 55px;
+      display: grid;
+      grid-template-rows: 24px 18px;
+      align-content: center;
+      justify-items: center;
+      row-gap: 2px;
+      color: #595959;
+      position: relative;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .rail-icon {
+      width: 23px;
+      height: 24px;
+      display: grid;
+      place-items: center;
+      color: #969696;
+      line-height: 1;
+    }
+    .rail-icon svg { width: 22px; height: 22px; display: block; fill: currentColor; }
+    .rail-item > span:last-child {
+      display: block;
+      height: 18px;
+      line-height: 18px;
+      text-align: center;
+      white-space: nowrap;
+    }
+    .rail-item.active {
+      height: 44px;
+      background: linear-gradient(180deg, #ff4d47 0%, #e1251b 100%);
+      color: #fff;
+      margin: 5px 6px 6px;
+      border-radius: 6px;
+    }
+    .rail-item.active .rail-icon { color: #fff; }
+    .rail-assistant { color: #6c38d9; height: 58px; }
+    .rail-assistant .rail-icon { color: #476fe8; }
+    .rail-bottom { position: absolute; bottom: 8px; left: 0; right: 0; color: #e1251b; }
+    .side {
+      position: absolute;
+      left: 56px;
+      top: 0;
+      bottom: 0;
+      width: 98px;
+      background: #fff;
+      border-right: 1px solid #edf0f5;
+      padding-top: 0;
+      z-index: 2;
+    }
+    .side-title {
+      height: 52px;
+      display: flex;
+      align-items: center;
+      padding-left: 17px;
+      font-size: 20px;
+      font-weight: 600;
+      border-bottom: 1px solid #f2f2f2;
+    }
+    .side-section {
+      padding: 0 7px;
+      margin-top: 5px;
+    }
+    .side-heading {
+      color: #111;
+      font-weight: 600;
+      padding: 8px 7px 6px;
+      line-height: 20px;
+    }
+    .side-menu {
+      min-height: 32px;
+      display: flex;
+      align-items: center;
+      padding: 0 7px;
+      color: #595959;
+      border-radius: 4px;
+      margin: 0;
+      white-space: nowrap;
+    }
+    .side-menu.active {
+      color: #e1251b;
+      background: #fff2ef;
+      font-weight: 500;
+    }
+    .main {
+      margin-left: 154px;
+      height: calc(100% - 50px);
+      overflow: hidden;
+      padding: 12px;
+    }
+    .topbar { padding-left: 164px; }
+    .nav-divider { height: 1px; background: #f1f1f1; margin: 7px 7px 5px; }
+    .interaction-hint {
+      position: fixed;
+      right: 20px;
+      bottom: 20px;
+      z-index: 80;
+      background: rgba(255,255,255,.96);
+      border: 1px solid #e5e7eb;
+      box-shadow: 0 3px 12px rgba(0,0,0,.1);
+      border-radius: 4px;
+      padding: 8px 12px;
+      color: #7a7f87;
+    }
+    .annotation { display: none !important; }
+    .upload-btn, .ops a, .img-url, .modal-close { cursor: pointer; }
+    .page-title {
+      height: 24px;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    .content-panel {
+      height: 814px;
+      background: #fff;
+      padding: 24px 14px 0;
+      border: 1px solid #eef1f5;
+      position: relative;
+    }
+    .summary-head {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+    }
+    .summary-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    .muted { color: #7d8794; }
+    .summary-actions {
+      display: flex;
+      gap: 12px;
+      padding-top: 12px;
+    }
+    .btn {
+      height: var(--control-height);
+      min-width: 74px;
+      border: 1px solid #dcdfe6;
+      background: #fff;
+      color: #606266;
+      border-radius: var(--radius-md);
+      padding: 0 12px;
+      cursor: pointer;
+    }
+    .btn-red {
+      border-color: #e1251b;
+      background: #e1251b;
+      color: #fff;
+    }
+    .btn:hover { border-color: #bfbfbf; color: var(--color-text); }
+    .btn-red:hover { border-color: #d21f17; background: #d21f17; color: #fff; }
+    .btn-red-outline:hover { border-color: var(--color-primary); background: #fff5f2; color: var(--color-primary); }
+    .input, .select { height: var(--control-height); border-radius: var(--radius-md) !important; }
+    .input:focus, .select:focus { outline: none; border-color: var(--color-primary); box-shadow: 0 0 0 2px rgba(225,37,27,.08); }
+    .ops a { color: var(--color-link); }
+    .ops a:hover { color: var(--color-primary); }
+    .toast-stack { position: fixed; top: 72px; left: 50%; transform: translateX(-50%); z-index: 200; display: grid; gap: 8px; }
+    .toast-message { min-width: 380px; padding: 10px 16px; border: 1px solid #b9edd0; background: #f0fff6; color: #237b50; border-radius: var(--radius-md); box-shadow: 0 9px 28px 8px rgba(0,0,0,.05); text-align: center; font-size: 13px; }
+    .toast-message.error { border-color: #f4c7be; background: #fff4f1; color: #b71b18; }
+    .upload-file-chip { display: none; margin-top: 10px; padding: 7px 10px; background: #f5f7fa; border-radius: 6px; color: #595959; }
+    .upload-file-chip.show { display: flex; justify-content: space-between; align-items: center; }
+    .field-error { display: none; color: #da3026; margin-top: 6px; font-size: 12px; }
+    .field-error.show { display: block; }
+    .kb-table tbody tr.filtered-out { display: none; }
+    .tabs .tab { cursor: pointer; }
+    .btn-red-outline {
+      border-color: #e1251b;
+      color: #e1251b;
+      background: #fff;
+    }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .cat-card {
+      height: 72px;
+      border: 1px solid #e1e5eb;
+      border-radius: 4px;
+      padding: 12px 16px;
+      position: relative;
+      background: #fff;
+    }
+    .cat-card:before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 12px;
+      width: 3px;
+      height: 48px;
+      background: var(--bar, #18b7b5);
+    }
+    .cat-num { font-size: 22px; line-height: 28px; font-weight: 600; }
+    .tabs {
+      display: flex;
+      gap: 28px;
+      height: 44px;
+      align-items: end;
+      border-bottom: 1px solid #edf0f5;
+      margin-top: 14px;
+    }
+    .tab {
+      height: 34px;
+      color: #333;
+      display: flex;
+      align-items: center;
+      border-bottom: 2px solid transparent;
+    }
+    .tab.active {
+      color: #e1251b;
+      border-bottom-color: #e1251b;
+      font-weight: 500;
+    }
+    .filters {
+      display: grid;
+      grid-template-columns: 1.1fr 1.25fr 1.25fr;
+      column-gap: 60px;
+      row-gap: 16px;
+      padding: 18px 0;
+      border-bottom: 1px solid #edf0f5;
+    }
+    .field {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      align-items: center;
+      gap: 10px;
+    }
+    .input, .select {
+      height: 28px;
+      border: 1px solid #dcdfe6;
+      border-radius: 4px;
+      padding: 0 10px;
+      color: #9aa3ad;
+      background: #fff;
+    }
+    .filter-actions {
+      grid-column: 3;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+    .upload-row {
+      height: 50px;
+      display: flex;
+      align-items: center;
+    }
+    .upload-btn {
+      height: 26px;
+      min-width: 88px;
+      padding: 0 12px;
+      border: 0;
+      background: #e1251b;
+      color: #fff;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .kb-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      background: #fff;
+    }
+    .kb-table th {
+      height: 38px;
+      background: #fafafa;
+      color: #333;
+      font-weight: 500;
+      text-align: left;
+      padding: 0 12px;
+      border-bottom: 1px solid #edf0f5;
+    }
+    .kb-table td {
+      height: 42px;
+      border-bottom: 1px solid #edf0f5;
+      padding: 0 12px;
+      color: #333;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .kb-table tr.warn { background: #fff1ef; }
+    .filetype {
+      display: inline-flex;
+      width: 42px;
+      height: 22px;
+      align-items: center;
+      justify-content: center;
+      background: #f2f3f5;
+      border-radius: 2px;
+      font-weight: 600;
+      margin-right: 8px;
+    }
+    .filetype.pdf { color: #e1251b; background: #ffeceb; }
+    .filetype.docx { color: #1677ff; background: #eaf3ff; }
+    .tag {
+      padding: 2px 6px;
+      border-radius: 2px;
+      color: #e1251b;
+      background: #ffeceb;
+    }
+    .tag.green { color: #0aa344; background: #eaffea; }
+    .tag.blue { color: #1677ff; background: #eaf3ff; }
+    .tag.orange { color: #d46b08; background: #fff3e0; }
+    .tag.purple { color: #722ed1; background: #f3e8ff; }
+    .status-ok { color: #22a900; }
+    .switch {
+      width: 32px;
+      height: 16px;
+      border-radius: 12px;
+      background: #b8bcc2;
+      position: relative;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .switch:after {
+      content: "";
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      top: 1px;
+      left: 1px;
+      background: #fff;
+      border-radius: 50%;
+    }
+    .switch.on { background: #e1251b; }
+    .switch.on:after { left: 17px; }
+    .ops a {
+      color: #e86b00;
+      text-decoration: none;
+      margin-right: 8px;
+      cursor: pointer;
+    }
+    .pager {
+      position: absolute;
+      right: 18px;
+      bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      color: #555;
+    }
+    .page-box {
+      min-width: 28px;
+      height: 28px;
+      display: inline-grid;
+      place-items: center;
+      border: 1px solid #dcdfe6;
+      border-radius: 4px;
+      background: #fff;
+    }
+    .page-box.active { background: #e1251b; color: #fff; border-color: #e1251b; }
+    .annotation {
+      position: absolute;
+      z-index: 6;
+      border: 1px solid #f5b4ae;
+      background: #fff8f7;
+      color: #8f1f18;
+      border-radius: 4px;
+      padding: 7px 9px;
+      line-height: 1.45;
+      box-shadow: 0 4px 12px rgba(225, 37, 27, .08);
+      max-width: 260px;
+    }
+    .annotation:before {
+      content: "";
+      display: inline-block;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #e1251b;
+      margin-right: 6px;
+      vertical-align: 1px;
+    }
+    .modal-mask {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, .52);
+      z-index: 20;
+      display: grid;
+      place-items: center;
+    }
+    .upload-modal {
+      width: 448px;
+      background: #fff;
+      border-radius: 6px;
+      box-shadow: 0 12px 34px rgba(0,0,0,.18);
+    }
+    .modal-head {
+      height: 40px;
+      border-bottom: 1px solid #edf0f5;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+    .modal-close { color: #c0c4cc; font-size: 18px; }
+    .modal-body { padding: 20px; }
+    .required { color: #e1251b; margin-right: 4px; }
+    .upload-field {
+      display: grid;
+      grid-template-columns: 60px 1fr;
+      gap: 10px;
+      margin-bottom: 18px;
+      align-items: start;
+    }
+    .upload-box {
+      height: 196px;
+      border: 1px dashed #dcdfe6;
+      border-radius: 4px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      color: #7d8794;
+    }
+    .upload-icon {
+      font-size: 32px;
+      color: #c7ccd6;
+      line-height: 1;
+    }
+    .help-text {
+      grid-column: 2;
+      color: #7d8794;
+      line-height: 1.55;
+      margin-top: -8px;
+    }
+    .help-text strong { color: #333; font-weight: 500; }
+    .modal-foot {
+      height: 54px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      align-items: center;
+      padding: 0 20px 18px;
+    }
+    .view-modal {
+      width: 864px;
+      height: 724px;
+      background: #fff;
+      border-radius: 5px;
+      box-shadow: 0 12px 34px rgba(0,0,0,.18);
+      overflow: hidden;
+    }
+    .view-toolbar {
+      height: 58px;
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      border-bottom: 1px solid #edf0f5;
+      gap: 12px;
+    }
+    .search {
+      width: 258px;
+      height: 28px;
+      border: 1px solid #dcdfe6;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      color: #b5bac2;
+      padding: 0 10px;
+      gap: 6px;
+    }
+    .view-spacer { flex: 1; }
+    .slice-list {
+      height: 568px;
+      overflow: hidden;
+      padding: 10px 20px 0;
+      background: #fff;
+      position: relative;
+    }
+    .slice-card {
+      border: 1px solid #e6e9ef;
+      border-radius: 4px;
+      padding: 14px 116px 12px 14px;
+      margin-bottom: 10px;
+      min-height: 108px;
+      position: relative;
+      background: #fff;
+    }
+    .slice-card h4 {
+      margin: 0 0 12px;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .slice-actions {
+      position: absolute;
+      top: 16px;
+      right: 18px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .slice-actions a { color: #e1251b; text-decoration: none; }
+    .slice-meta {
+      color: #222;
+      line-height: 1.7;
+    }
+    .url-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      line-height: 1.9;
+      position: relative;
+      width: fit-content;
+      max-width: 100%;
+    }
+    .url-label { color: #333; flex: none; }
+    .img-url {
+      display: inline-block;
+      max-width: 430px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: #1677ff;
+      text-decoration: none;
+      vertical-align: bottom;
+      cursor: pointer;
+    }
+    .preview-pop {
+      position: absolute;
+      left: 96px;
+      top: 28px;
+      width: 286px;
+      max-height: 220px;
+      background: #fff;
+      border: 1px solid #e6e9ef;
+      border-radius: 6px;
+      padding: 8px;
+      box-shadow: 0 8px 24px rgba(0,0,0,.15);
+      z-index: 5;
+      display: none;
+    }
+    .url-row:hover .preview-pop,
+    .preview-pop.visible { display: block; }
+    .preview-pop img {
+      display: block;
+      max-width: 268px;
+      max-height: 198px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+    }
+    .view-pager {
+      height: 58px;
+      border-top: 1px solid #edf0f5;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 0 22px;
+    }
+    .scrollbar-fake {
+      position: absolute;
+      right: 18px;
+      top: 10px;
+      width: 8px;
+      height: 558px;
+      border-radius: 6px;
+      background: #f1f2f4;
+    }
+    .scrollbar-fake:after {
+      content: "";
+      position: absolute;
+      right: 0;
+      top: 0;
+      width: 8px;
+      height: 260px;
+      border-radius: 6px;
+      background: #9a9a9a;
+    }
+    .excel-screen {
+      min-width: 1440px;
+      height: 900px;
+      background: #f7efe1;
+      position: relative;
+      overflow: hidden;
+    }
+    .wps-tabs {
+      height: 58px;
+      background: #dfe5f2;
+      display: flex;
+      align-items: end;
+      gap: 8px;
+      padding: 0 18px;
+    }
+    .wps-tab {
+      width: 220px;
+      height: 42px;
+      background: #eef2f8;
+      border-radius: 8px 8px 0 0;
+      display: flex;
+      align-items: center;
+      padding: 0 16px;
+      font-size: 14px;
+    }
+    .wps-tab.active { background: #fff; font-weight: 500; }
+    .wps-ribbon {
+      height: 156px;
+      background: #fff;
+      border-bottom: 1px solid #e0e3e8;
+    }
+    .wps-menu {
+      height: 46px;
+      display: flex;
+      align-items: center;
+      gap: 26px;
+      padding: 0 24px;
+      font-size: 16px;
+    }
+    .wps-menu .active { color: #07a064; font-weight: 600; }
+    .ribbon-tools {
+      margin: 0 18px;
+      height: 106px;
+      border: 1px solid #e1e4ea;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      padding: 16px 22px;
+      gap: 28px;
+      color: #a0a6ae;
+      font-size: 15px;
+    }
+    .formula {
+      height: 50px;
+      background: #fff;
+      display: flex;
+      align-items: center;
+      padding-left: 18px;
+      gap: 14px;
+      border-bottom: 1px solid #e4e7ec;
+    }
+    .name-box {
+      width: 172px;
+      height: 32px;
+      border: 1px solid #d7dce5;
+      background: #fff;
+      border-radius: 4px;
+      display: grid;
+      place-items: center;
+      font-size: 18px;
+    }
+    .fx {
+      flex: 1;
+      height: 32px;
+      border: 1px solid #d7dce5;
+      background: #fff;
+      border-radius: 4px;
+      padding: 6px 12px;
+      font-size: 16px;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    .sheet-wrap {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      top: 264px;
+      bottom: 42px;
+      background: #fff;
+      overflow: hidden;
+      border: 1px solid #d7dce5;
+    }
+    .excel-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+      font-size: 13px;
+    }
+    .excel-table th {
+      height: 44px;
+      background: #f1f4f6;
+      border: 1px solid #d9dee6;
+      font-size: 15px;
+      font-weight: 600;
+      text-align: center;
+    }
+    .excel-table td {
+      border: 1px solid #d9dee6;
+      padding: 9px;
+      vertical-align: top;
+      line-height: 1.6;
+      background: #fff;
+    }
+    .excel-table .row-big td { height: 132px; }
+    .excel-table .image-row td { height: 94px; vertical-align: middle; }
+    .excel-table .image-row td[rowspan] { vertical-align: top; padding-top: 12px; }
+    .excel-url {
+      color: #1677ff;
+      word-break: break-all;
+    }
+    .thumbs {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      flex-wrap: nowrap;
+    }
+    .thumbs.single { justify-content: flex-start; }
+    .thumbs img {
+      max-width: 126px;
+      max-height: 86px;
+      width: auto;
+      height: auto;
+      object-fit: contain;
+      border: 1px solid #d9dee6;
+      background: #fff;
+    }
+    .sheet-tab {
+      position: absolute;
+      left: 118px;
+      bottom: 0;
+      height: 34px;
+      width: 220px;
+      background: #fff;
+      border-top: 3px solid #11a36a;
+      color: #008a52;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      font-size: 14px;
+    }
+    .watermark {
+      position: absolute;
+      left: 430px;
+      top: 250px;
+      color: rgba(0,0,0,.08);
+      font-size: 42px;
+      transform: rotate(-18deg);
+      pointer-events: none;
+    }
+    .txt-screen {
+      min-width: 1440px;
+      height: 900px;
+      background: #f0f2f5;
+      position: relative;
+      overflow: hidden;
+      padding: 34px 46px;
+    }
+    .txt-window {
+      height: 760px;
+      background: #fff;
+      border: 1px solid #d8dce5;
+      box-shadow: 0 10px 30px rgba(0,0,0,.08);
+      display: grid;
+      grid-template-rows: 46px 42px 1fr 34px;
+    }
+    .txt-titlebar {
+      background: #e8edf7;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 18px;
+      font-size: 14px;
+      color: #20242c;
+    }
+    .txt-menu {
+      display: flex;
+      align-items: center;
+      gap: 26px;
+      padding: 0 18px;
+      border-bottom: 1px solid #e5e8ef;
+      font-size: 14px;
+    }
+    .txt-content {
+      padding: 22px 26px;
+      overflow: hidden;
+      font-family: Consolas, "Microsoft YaHei", monospace;
+      font-size: 16px;
+      line-height: 1.75;
+      white-space: pre-wrap;
+      color: #111;
+    }
+    .txt-statusbar {
+      border-top: 1px solid #e5e8ef;
+      color: #5f6673;
+      display: flex;
+      align-items: center;
+      gap: 28px;
+      padding: 0 18px;
+      background: #f7f8fa;
+    }
+    .constraints-screen {
+      min-width: 1440px;
+      min-height: 900px;
+      background: #f1f4f8;
+      padding: 28px 42px;
+    }
+    .constraints-shell {
+      background: #fff;
+      border: 1px solid #e6e9ef;
+      padding: 22px 24px 28px;
+    }
+    .constraints-title {
+      font-size: 18px;
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+    .constraint-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin: 18px 0;
+    }
+    .constraint-card {
+      border: 1px solid #e6e9ef;
+      border-radius: 4px;
+      padding: 14px;
+      min-height: 96px;
+      background: #fff;
+    }
+    .constraint-card strong {
+      display: block;
+      font-weight: 500;
+      margin-bottom: 8px;
+    }
+    .rule-table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+    .rule-table th,
+    .rule-table td {
+      border-bottom: 1px solid #edf0f5;
+      padding: 12px;
+      text-align: left;
+      vertical-align: top;
+      line-height: 1.6;
+    }
+    .rule-table th {
+      background: #fafafa;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <section id="main" class="screen active">
+    <div class="app-frame">
+      <div class="brand-rail">
+        <div class="brand-logo">W</div>
+        <div class="rail-item">AI助理</div>
+        <div class="rail-item">首页</div>
+        <div class="rail-item">获客</div>
+        <div class="rail-item active">运营</div>
+        <div class="rail-item">客户</div>
+        <div class="rail-item">内容</div>
+        <div class="rail-item">数据</div>
+      </div>
+      <aside class="side">
+        <div class="side-title">微电云</div>
+        <div class="side-section">
+          <div class="side-heading">客户运营</div>
+          <div class="side-menu">好友欢迎语</div>
+          <div class="side-menu">好友群发</div>
+          <div class="side-menu">好友自动回复</div>
+          <div class="side-menu">企微朋友圈</div>
+          <div class="side-menu">好友SOP</div>
+          <div class="side-menu">企微场景营销</div>
+        </div>
+        <div class="side-section">
+          <div class="side-heading">智能客服</div>
+          <div class="side-menu active">知识库</div>
+          <div class="side-menu">客服配置</div>
+        </div>
+      </aside>
+      <header class="topbar">
+        <span>我的项目</span>
+        <span class="project-select">FB店铺001 ˅</span>
+        <span class="topbar-spacer"></span>
+        <span class="notice-pill">提醒：测试 项目ID: P00006482 项目名称</span>
+        <span class="top-link">消息<span style="color:#e1251b">34</span></span>
+        <span class="top-link">资源剩余</span>
+        <span class="top-link">账户</span>
+        <span class="top-link">客服</span>
+        <span class="top-link">下载</span>
+        <span class="avatar">人</span>
+      </header>
+      <main class="main">
+        <div class="page-title">知识库</div>
+        <div class="content-panel">
+          <div class="summary-head">
+            <div>
+              <div class="summary-title">知识分类概览</div>
+              <div class="muted">按业务分组查看当前知识沉淀数量</div>
+            </div>
+            <div class="summary-actions">
+              <button class="btn btn-red" onclick="showToast('已进入知识回写')">知识回写</button>
+              <button class="btn btn-red-outline" onclick="showToast('已进入知识检索')">知识检索</button>
+            </div>
+          </div>
+          <div class="cards">
+            <div class="cat-card" style="--bar:#19b7b5"><div>商品咨询</div><div class="cat-num">10</div></div>
+            <div class="cat-card" style="--bar:#ea6a00"><div>活动咨询</div><div class="cat-num">10</div></div>
+            <div class="cat-card" style="--bar:#1677ff"><div>购买咨询</div><div class="cat-num">7</div></div>
+            <div class="cat-card" style="--bar:#7a4ff0"><div>物流咨询</div><div class="cat-num">6</div></div>
+            <div class="cat-card" style="--bar:#e1251b"><div>售后咨询</div><div class="cat-num">6</div></div>
+            <div class="cat-card" style="--bar:#22a544"><div>其他</div><div class="cat-num">11</div></div>
+          </div>
+          <div class="tabs">
+            <div class="tab active">文档知识</div>
+            <div class="tab">QA知识</div>
+            <div class="tab">活动规则管理</div>
+            <div class="tab">主播商品池</div>
+          </div>
+          <div class="filters">
+            <label class="field"><span>文件名称</span><input class="input" value="请输入文件名称"></label>
+            <label class="field"><span>所属分类</span><select class="select"><option>请选择所属分类</option></select></label>
+            <label class="field"><span>状态</span><select class="select"><option>请选择状态</option></select></label>
+            <label class="field"><span>启用开关</span><select class="select"><option>请选择启用开关</option></select></label>
+            <div></div>
+            <div class="filter-actions"><button class="btn" data-action="filter-reset">重置</button><button class="btn btn-red-outline" data-action="filter-submit">搜索</button></div>
+          </div>
+          <div class="upload-row"><button class="upload-btn" data-action="upload-open">＋ 上传文件</button></div>
+          <table class="kb-table">
+            <colgroup>
+              <col style="width:16%"><col style="width:8%"><col style="width:7%"><col style="width:9%"><col style="width:7%"><col style="width:8%"><col style="width:8%"><col style="width:12%"><col style="width:8%"><col style="width:17%">
+            </colgroup>
+            <thead>
+              <tr>
+                <th>文件名称</th><th>所属分类</th><th>切片数</th><th>图片切片数</th><th>已启用</th><th>状态</th><th>上传人</th><th>上传时间</th><th>启用开关</th><th>操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="filetype docx">DOCX</span>退货包装示例.docx</td><td><span class="tag">售后咨询</span></td><td>14</td><td>5</td><td>14</td><td><span class="status-ok">● 已生效</span></td><td>高腾</td><td>2026-08-17 13:51</td><td><span class="switch on"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>
+              </tr>
+              <tr>
+                <td><span class="filetype">TXT</span>QA格式0708.txt</td><td><span class="tag">售后咨询</span></td><td>2</td><td>0</td><td>2</td><td><span class="status-ok">● 已生效</span></td><td>zyj_dev</td><td>2026-07-08 11:36</td><td><span class="switch on"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>
+              </tr>
+              <tr class="warn">
+                <td><span class="filetype pdf">PDF</span>c14fe7b5ddb749b4.pdf</td><td><span class="tag">售后咨询</span></td><td>7</td><td>0</td><td>7</td><td><span class="status-ok">● 已生效</span></td><td>zyj_dev</td><td>2026-07-08 11:32</td><td><span class="switch on"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>
+              </tr>
+              <tr>
+                <td><span class="filetype">TXT</span>账户管理_登录与注册.txt</td><td><span class="tag green">其他</span></td><td>15</td><td>0</td><td>15</td><td><span class="status-ok">● 已生效</span></td><td>运营人员</td><td>2026-07-07 16:55</td><td><span class="switch on"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>
+              </tr>
+              <tr>
+                <td><span class="filetype pdf">PDF</span>删除-朋友圈相关.pdf</td><td><span class="tag orange">活动咨询</span></td><td>16</td><td>0</td><td>-</td><td><span class="status-ok">● 已生效</span></td><td>田田</td><td>2026-06-24 18:58</td><td><span class="switch"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>
+              </tr>
+              <tr>
+                <td><span class="filetype pdf">PDF</span>群模板功能0324.pdf</td><td><span class="tag blue">购买咨询</span></td><td>15</td><td>0</td><td>15</td><td><span class="status-ok">● 已生效</span></td><td>田田</td><td>2026-06-24 18:57</td><td><span class="switch on"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>
+              </tr>
+              <tr>
+                <td><span class="filetype pdf">PDF</span>【上线公告】V3.42.0.pdf</td><td><span class="tag purple">物流咨询</span></td><td>9</td><td>0</td><td>9</td><td><span class="status-ok">● 已生效</span></td><td>田田</td><td>2026-06-23 17:09</td><td><span class="switch on"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>
+              </tr>
+              <tr>
+                <td><span class="filetype">TXT</span>测试5.txt</td><td><span class="tag" style="color:#00a2a8;background:#e7ffff">商品咨询</span></td><td>3</td><td>0</td><td>3</td><td><span class="status-ok">● 已生效</span></td><td>运营人员</td><td>2026-06-18 11:03</td><td><span class="switch on"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="annotation" style="left:610px;top:424px;">新增“图片切片数”列，仅统计包含图片附件的切片数量；纯文字、PDF、TXT 图片均显示 0。</div>
+          <div class="annotation" style="right:170px;bottom:56px;">主页面“下载”仍导出 TXT，文件名按当前分钟：知识库切片_202608171351.txt；含图知识点只追加 URL，不嵌入图片。</div>
+          <div class="pager"><span>共 33 条</span><span class="page-box">‹</span><span class="page-box active">1</span><span class="page-box">2</span><span class="page-box">3</span><span class="page-box">4</span><span class="page-box">›</span><span class="page-box" style="width:76px">10条/页</span><span>前往</span><span class="page-box">1</span><span>页</span></div>
+          <div class="watermark">预发环境</div>
+        </div>
+      </main>
+    </div>
+  </section>
+
+  <section id="upload" class="screen">
+    <div class="app-frame">
+      <div class="brand-rail"><div class="brand-logo">W</div><div class="rail-item active">运营</div></div>
+      <aside class="side"><div class="side-title">微电云</div><div class="side-section"><div class="side-heading">智能客服</div><div class="side-menu active">知识库</div><div class="side-menu">客服配置</div></div></aside>
+      <header class="topbar"><span>我的项目</span><span class="project-select">FB店铺001 ˅</span><span class="topbar-spacer"></span><span class="notice-pill">提醒：试 项目ID: P00006482</span><span class="top-link">消息<span style="color:#e1251b">34</span></span><span class="avatar">人</span></header>
+      <main class="main"><div class="page-title">知识库</div><div class="content-panel"><div class="summary-title">知识分类概览</div><div class="cards"><div class="cat-card"><div>商品咨询</div><div class="cat-num">10</div></div><div class="cat-card" style="--bar:#ea6a00"><div>活动咨询</div><div class="cat-num">10</div></div><div class="cat-card" style="--bar:#e1251b"><div>售后咨询</div><div class="cat-num">6</div></div><div class="cat-card" style="--bar:#22a544"><div>其他</div><div class="cat-num">11</div></div></div></div></main>
+      <div class="modal-mask">
+        <div class="upload-modal">
+          <div class="modal-head"><span>上传文档文件</span><span class="modal-close">×</span></div>
+          <div class="modal-body">
+            <div class="upload-field">
+              <label><span class="required">*</span>所属分类</label>
+              <div>
+                <select class="select upload-category" style="width:100%"><option value="">请选择</option><option>商品咨询</option><option>售后咨询</option><option>活动咨询</option><option>物流咨询</option><option>购买咨询</option><option>其他</option></select>
+                <div class="muted" style="margin-top:6px;">若在具体分类下上传则默认归入该分类，在「全部」下上传需手动选择</div>
+                <div class="field-error category-error">请选择所属分类</div>
+              </div>
+            </div>
+            <div class="upload-field">
+              <label><span class="required">*</span>上传文件</label>
+              <div class="upload-box">
+                <div>
+                  <div class="upload-icon">⇧</div>
+                  <div style="margin-top:12px;color:#333;">点击或拖拽文件到此处上传</div>
+                  <div style="margin-top:8px;">支持 pdf / txt / word（.docx），单文件不超过 3MB，支持多文件批量上传</div>
+                </div>
+              </div>
+              <div class="upload-file-chip"><span>退货包装规范.docx</span><a class="remove-file">移除</a></div>
+              <div class="field-error file-error">请选择 PDF、TXT 或 Word（.docx）文件</div>
+              <div class="help-text">如知识文档中包含需要随答案返回的图片，请使用 <strong>Word（.docx）</strong> 格式上传。PDF、TXT 中的图片不进行抽取。</div>
+            </div>
+            <div class="muted" style="line-height:1.6;">上传后系统自动切片处理，完成后可查看每个切片内容并单独控制启用状态。</div>
+          </div>
+          <div class="modal-foot"><button class="btn" data-action="modal-close">取消</button><button class="btn btn-red upload-confirm" data-action="upload-submit">确定上传</button></div>
+        </div>
+        <div class="annotation" style="left:930px;top:292px;">仅扩展格式提示与说明文案，不新增 OCR、多模态识图、图片向量化等配置项。</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="view" class="screen">
+    <div class="app-frame">
+      <div class="brand-rail"><div class="brand-logo">W</div><div class="rail-item active">运营</div></div>
+      <aside class="side"><div class="side-title">微电云</div><div class="side-section"><div class="side-heading">智能客服</div><div class="side-menu active">知识库</div></div></aside>
+      <header class="topbar"><span>我的项目</span><span class="project-select">FB店铺001 ˅</span><span class="topbar-spacer"></span><span class="notice-pill">提醒：人群未更新</span><span class="avatar">人</span></header>
+      <main class="main"><div class="page-title">知识库</div><div class="content-panel"></div></main>
+      <div class="modal-mask">
+        <div class="view-modal">
+          <div class="modal-head"><span>查看切片 - 退货包装示例.docx</span><span class="modal-close">×</span></div>
+          <div class="view-toolbar">
+            <div class="search">⌕ 搜索切片内容</div>
+            <div class="view-spacer"></div>
+            <button class="btn btn-red" data-action="excel-preview">下载切片内容</button>
+          </div>
+          <div class="slice-list">
+            <div class="slice-card">
+              <h4>切片 #1</h4>
+              <div class="slice-actions"><span class="switch on"></span><a>编辑</a><a>删除</a></div>
+              <div class="slice-meta">售后咨询<br>来源文件：退货包装示例.docx<br>知识点数量：14</div>
+            </div>
+            <div class="slice-card">
+              <h4>切片 #2</h4>
+              <div class="slice-actions"><span class="switch on"></span><a>编辑</a><a>删除</a></div>
+              <div class="slice-meta">--- 知识点 2 ---<br>用户问题：退货标准包装长什么样？<br>标准回复：请参考以下示例，包装外箱需完整，封口胶带和标签需清晰。</div>
+              <div class="url-row"><span class="url-label">图片 URL 1：</span><a class="img-url">https://xxx.jdcloud.com/knowledge/20260817/return_example_001.png</a><div class="preview-pop"><img src="prototype-assets/return-example-001.svg" alt="退货标准包装示例"></div></div>
+              <div class="url-row"><span class="url-label">图片 URL 2：</span><a class="img-url">https://xxx.jdcloud.com/knowledge/20260817/return_example_002.png</a><div class="preview-pop"><img src="prototype-assets/return-example-002.svg" alt="包装封口与标签示例"></div></div>
+            </div>
+            <div class="slice-card">
+              <h4>切片 #3</h4>
+              <div class="slice-actions"><span class="switch on"></span><a>编辑</a><a>删除</a></div>
+              <div class="slice-meta">--- 知识点 3 ---<br>用户问题：我自己下单的/我已经下完单了<br>标准回复：这个订单不是通过福利官下单的，无法返京豆。您下回购买可先把商品链接分享给我。</div>
+            </div>
+            <div class="scrollbar-fake"></div>
+          </div>
+          <div class="view-pager"><span>共 14 条</span><span class="page-box" style="width:76px">10条/页</span><span class="page-box">‹</span><span class="page-box active">1</span><span class="page-box">2</span><span class="page-box">›</span><span>前往</span><span class="page-box">1</span><span>页</span></div>
+        </div>
+        <div class="annotation" style="left:1018px;top:382px;">URL 单行展示，最大宽度 560px；超出省略，不换行，也不撑大切片卡片或弹窗。</div>
+        <div class="annotation" style="left:982px;top:578px;">多张图片按原知识文档中的出现顺序展示：图片 URL 1、图片 URL 2、图片 URL 3。</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="hover" class="screen">
+    <div class="app-frame">
+      <div class="brand-rail"><div class="brand-logo">W</div><div class="rail-item active">运营</div></div>
+      <aside class="side"><div class="side-title">微电云</div><div class="side-section"><div class="side-heading">智能客服</div><div class="side-menu active">知识库</div></div></aside>
+      <header class="topbar"><span>我的项目</span><span class="project-select">FB店铺001 ˅</span><span class="topbar-spacer"></span><span class="avatar">人</span></header>
+      <main class="main"><div class="page-title">知识库</div><div class="content-panel"></div></main>
+      <div class="modal-mask">
+        <div class="view-modal">
+          <div class="modal-head"><span>查看切片 - 退货包装示例.docx</span><span class="modal-close">×</span></div>
+          <div class="view-toolbar"><div class="search">⌕ 搜索切片内容</div><div class="view-spacer"></div><button class="btn btn-red" data-action="excel-preview">下载切片内容</button></div>
+          <div class="slice-list">
+            <div class="slice-card" style="margin-top:82px;">
+              <h4>切片 #2</h4>
+              <div class="slice-actions"><span class="switch on"></span><a>编辑</a><a>删除</a></div>
+              <div class="slice-meta">--- 知识点 2 ---<br>用户问题：退货标准包装长什么样？<br>标准回复：请参考以下示例，包装外箱需完整，封口胶带和标签需清晰。</div>
+              <div class="url-row">
+                <span class="url-label">图片 URL 1：</span>
+                <a class="img-url">https://xxx.jdcloud.com/knowledge/20260817/return_example_001.png</a>
+                <div class="preview-pop visible"><img src="prototype-assets/return-example-001.svg" alt="退货标准包装示例"></div>
+              </div>
+              <div class="url-row"><span class="url-label">图片 URL 2：</span><a class="img-url">https://xxx.jdcloud.com/knowledge/20260817/return_example_002.png</a></div>
+            </div>
+            <div class="scrollbar-fake"></div>
+          </div>
+          <div class="view-pager"><span>共 14 条</span><span class="page-box active">1</span><span class="page-box">2</span></div>
+        </div>
+        <div class="annotation" style="left:890px;top:384px;">Hover 浮层显示真实图片内容，白底、轻阴影、圆角；图片保持原始宽高比，设置最大宽高后等比例缩放。</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="search" class="screen">
+    <div class="app-frame">
+      <div class="brand-rail"><div class="brand-logo">W</div><div class="rail-item active">运营</div></div>
+      <aside class="side"><div class="side-title">微电云</div><div class="side-section"><div class="side-heading">智能客服</div><div class="side-menu active">知识库</div></div></aside>
+      <header class="topbar"><span>我的项目</span><span class="project-select">FB店铺001 ˅</span><span class="topbar-spacer"></span><span class="avatar">人</span></header>
+      <main class="main"><div class="page-title">知识库</div><div class="content-panel"></div></main>
+      <div class="modal-mask">
+        <div class="view-modal">
+          <div class="modal-head"><span>查看切片 - 退货包装示例.docx</span><span class="modal-close">×</span></div>
+          <div class="view-toolbar"><div class="search" style="color:#333;">⌕ return_example_001</div><div class="view-spacer"></div><button class="btn btn-red" data-action="excel-preview">下载切片内容</button></div>
+          <div class="slice-list">
+            <div class="slice-card" style="margin-top:10px;">
+              <h4>切片 #2</h4>
+              <div class="slice-actions"><span class="switch on"></span><a>编辑</a><a>删除</a></div>
+              <div class="slice-meta">--- 知识点 2 ---<br>用户问题：退货标准包装长什么样？<br>标准回复：请参考以下示例，包装外箱需完整，封口胶带和标签需清晰。</div>
+              <div class="url-row"><span class="url-label">图片 URL 1：</span><a class="img-url">https://xxx.jdcloud.com/knowledge/20260817/return_example_001.png</a><div class="preview-pop"><img src="prototype-assets/return-example-001.svg" alt="退货标准包装示例"></div></div>
+            </div>
+            <div class="muted" style="padding:6px 0 0 12px;">仅展示 1 条匹配结果</div>
+          </div>
+          <div class="view-pager"><span>共 1 条</span><span class="page-box" style="width:76px">10条/页</span><span class="page-box active">1</span></div>
+        </div>
+        <div class="annotation" style="left:914px;top:242px;">搜索范围扩展至用户问题、标准回复、图片 URL；支持完整 URL 或任意片段检索。</div>
+      </div>
+    </div>
+  </section>
+
+  <section id="excel" class="screen">
+    <div class="excel-screen">
+      <div class="wps-tabs">
+        <div class="wps-tab">WPS Office</div>
+        <div class="wps-tab active">知识库切片_202608171351.xlsx</div>
+        <div class="wps-tab">新建 XLSX 工作表.xlsx</div>
+      </div>
+      <div class="wps-ribbon">
+        <div class="wps-menu"><span>文件</span><span class="active">开始</span><span>插入</span><span>页面</span><span>公式</span><span>数据</span><span>审阅</span><span>视图</span><span>工具</span></div>
+        <div class="ribbon-tools"><span>宋体 11</span><span>加粗</span><span>边框</span><span>合并</span><span>排序</span><span>筛选</span><span>冻结</span></div>
+      </div>
+      <div style="height:50px;background:#fff3dd;display:grid;place-items:center;color:#8a4d06;font-size:15px;">导出文件命名：知识库切片_202608171351.xlsx</div>
+      <div class="formula"><div class="name-box">A1</div><div class="fx">切片编号 | 用户问题 | 标准回复 | 图片 URL | 图片预览</div></div>
+      <div class="sheet-wrap">
+        <table class="excel-table">
+          <colgroup><col style="width:90px"><col style="width:250px"><col style="width:410px"><col style="width:430px"><col style="width:360px"></colgroup>
+          <thead><tr><th>切片编号</th><th>用户问题</th><th>标准回复</th><th>图片 URL</th><th>图片预览</th></tr></thead>
+          <tbody>
+            <tr class="image-row">
+              <td rowspan="2">切片 #2</td>
+              <td rowspan="2">退货标准包装长什么样？</td>
+              <td rowspan="2">请参考以下示例，包装外箱需完整，封口胶带和标签需清晰。</td>
+              <td class="excel-url">https://xxx.jdcloud.com/knowledge/20260817/return_example_001.png</td>
+              <td><div class="thumbs single"><img src="prototype-assets/return-example-001.svg" alt="退货标准包装示例"></div></td>
+            </tr>
+            <tr class="image-row">
+              <td class="excel-url">https://xxx.jdcloud.com/knowledge/20260817/return_example_002.png</td>
+              <td><div class="thumbs single"><img src="prototype-assets/return-example-002.svg" alt="包装封口与标签示例"></div></td>
+            </tr>
+            <tr class="image-row">
+              <td>切片 #6</td>
+              <td>如何申请换货？</td>
+              <td>您可以在订单详情页点击申请售后，选择换货并按页面提示提交。</td>
+              <td class="excel-url">https://xxx.jdcloud.com/knowledge/20260817/exchange_step_001.png</td>
+              <td><div class="thumbs single"><img src="prototype-assets/exchange-step-001.svg" alt="换货流程截图示例"></div></td>
+            </tr>
+            <tr>
+              <td>切片 #7</td>
+              <td>发票如何开具？</td>
+              <td>请在订单完成后进入订单详情页申请发票。</td>
+              <td></td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="sheet-tab">knowledge_export</div>
+      <div class="annotation" style="left:940px;top:510px;">Excel 同时保留完整 URL 和实际图片缩略图；每张图片独占一行 URL 与预览单元格，多图按原始顺序排列。</div>
+      <div class="annotation" style="left:1110px;top:660px;">缩略图保持原始宽高比，通过最大宽高控制单元格高度，不拉伸、不裁剪。</div>
+    </div>
+  </section>
+
+  <section id="txt" class="screen">
+    <div class="txt-screen">
+      <div class="txt-window">
+        <div class="txt-titlebar">
+          <span>知识库切片_202608171351.txt</span>
+          <span>最小化　最大化　关闭</span>
+        </div>
+        <div class="txt-menu"><span>文件</span><span>编辑</span><span>查看</span></div>
+        <div class="txt-content">售后咨询
+来源文件：退货包装示例.docx
+知识点数量：14
+
+--- 知识点 1 ---
+
+用户问题：退货规则是什么？
+
+标准回复：
+商品签收后 7 天内，且不影响二次销售的情况下，可按售后流程申请退货。
+
+--- 知识点 2 ---
+
+用户问题：退货标准包装长什么样？
+
+标准回复：
+请参考以下示例，包装外箱需完整，封口胶带和标签需清晰。
+
+图片：
+https://xxx.jdcloud.com/knowledge/20260817/return_example_001.png
+https://xxx.jdcloud.com/knowledge/20260817/return_example_002.png
+
+--- 知识点 3 ---
+
+用户问题：如何申请换货？
+
+标准回复：
+您可以在订单详情页点击申请售后，选择换货并按页面提示提交。
+
+图片：
+https://xxx.jdcloud.com/knowledge/20260817/exchange_step_001.png</div>
+        <div class="txt-statusbar"><span>行 1，列 1</span><span>纯文本</span><span>UTF-8</span><span>导出口径：只导出 URL，不嵌入真实图片；纯文字知识点不显示“图片：无”。</span></div>
+      </div>
+      <div class="annotation" style="left:950px;top:260px;">TXT 沿用原文字结构；含图片知识点在“图片：”下按原顺序追加 URL。</div>
+      <div class="annotation" style="left:950px;top:380px;">文件名精确到分钟：知识库切片_YYYYMMDDHHmm.txt。</div>
+    </div>
+  </section>
+
+  <section id="constraints" class="screen">
+    <div class="constraints-screen">
+      <div class="constraints-shell">
+        <div class="constraints-title">原型约束清单</div>
+        <div class="muted">根据 all_details.json 中可抽取的平台习惯收敛：字段可追踪、状态可排查、输出可复现、通知/导出模板化。以下为本原型需要遵守的研发落地口径。</div>
+        <div class="constraint-grid">
+          <div class="constraint-card"><strong>字段可追踪</strong><div class="muted">主表保留来源文件、分类、切片数、图片切片数、状态、上传人、上传时间；切片内保留图片 URL 原文。</div></div>
+          <div class="constraint-card"><strong>状态可排查</strong><div class="muted">沿用现有状态与启用开关，不新增图片专属状态；图片能力作为切片附件能力呈现。</div></div>
+          <div class="constraint-card"><strong>搜索可命中</strong><div class="muted">搜索字段覆盖用户问题、标准回复、图片 URL，支持完整 URL 或片段检索。</div></div>
+          <div class="constraint-card"><strong>导出可复现</strong><div class="muted">TXT/Excel 均按当前分钟命名；TXT 导出 URL，Excel 同时导出 URL 与缩略图。</div></div>
+        </div>
+        <table class="rule-table">
+          <colgroup><col style="width:16%"><col style="width:32%"><col style="width:32%"><col style="width:20%"></colgroup>
+          <thead><tr><th>约束项</th><th>原型落实</th><th>验收口径</th><th>对应页面</th></tr></thead>
+          <tbody>
+            <tr><td>格式边界</td><td>上传区支持 PDF / TXT / Word（.docx），并提示含图片请用 Word。</td><td>不出现 OCR、图片向量化、多模态识图配置；PDF/TXT 图片不抽取。</td><td>上传文件弹窗</td></tr>
+            <tr><td>分类边界</td><td>所属分类仍为商品咨询、售后咨询、活动咨询等业务分类。</td><td>不新增“图文知识”“图片知识”等分类。</td><td>知识库主页面</td></tr>
+            <tr><td>URL 展示</td><td>图片 URL 单行展示，设置最大宽度并超出省略。</td><td>不换行，不撑大切片卡片，不改变查看弹窗宽度。</td><td>查看切片页面</td></tr>
+            <tr><td>图片顺序</td><td>多图用图片 URL 1、2、3 顺序展示，Excel 缩略图同序排列。</td><td>展示、搜索、TXT、Excel 中顺序与原文档一致。</td><td>查看切片 / TXT / Excel</td></tr>
+            <tr><td>排查能力</td><td>URL 原文可见、可复制、可搜索，Hover 仅用于效率提升。</td><td>预览浮层不替代 URL，不遮挡整页，鼠标移出消失。</td><td>Hover / 搜索状态</td></tr>
+            <tr><td>导出命名</td><td>示例为知识库切片_202608171351.txt / .xlsx。</td><td>命名格式固定为知识库切片_YYYYMMDDHHmm。</td><td>TXT / Excel 导出示意</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <script>
+    const screens = document.querySelectorAll(".screen");
+
+    const railMarkup = `
+      <div class="brand-logo"><img class="brand-logo-source" src="prototype-assets/sidebar-reference.png" alt="微电云"></div>
+      <img class="primary-rail-reference" src="prototype-assets/primary-rail-reference.png" alt="AI助理、首页、获客、运营、客户、SDMP、内容、数据、风控、设置">`;
+
+    const sideMarkup = `
+      <div class="side-title">微电云</div>
+      <div class="side-section">
+        <div class="side-heading">客户运营</div>
+        <div class="side-menu">好友欢迎语</div>
+        <div class="side-menu">好友群发</div>
+        <div class="side-menu">好友自动回复</div>
+        <div class="side-menu">企微朋友圈</div>
+        <div class="side-menu active">好友SOP</div>
+        <div class="side-menu">企微场景营销</div>
+      </div>
+      <div class="side-section">
+        <div class="side-heading">客户群运营</div>
+        <div class="side-menu">进群欢迎语</div>
+        <div class="side-menu">客户群公告</div>
+        <div class="side-menu">客户群群发</div>
+        <div class="side-menu">群自动回复</div>
+        <div class="side-menu">客户群SOP</div>
+      </div>
+      <div class="side-section">
+        <div class="side-heading">智能客服</div>
+        <div class="side-menu">知识库</div>
+        <div class="side-menu">客服配置</div>
+      </div>
+      <div class="side-section">
+        <div class="side-heading">联盟推广</div>
+        <div class="side-menu">CPS转链</div>
+        <div class="side-menu">CPS订单查询</div>
+        <div class="side-menu">活动页管理</div>
+      </div>`;
+
+    document.querySelectorAll(".brand-rail").forEach((el) => el.innerHTML = railMarkup);
+    document.querySelectorAll(".side").forEach((el) => el.innerHTML = sideMarkup);
+
+    function activateState(state) {
+      if (!document.getElementById(state)) return;
+      screens.forEach((s) => s.classList.toggle("active", s.id === state));
+      const nextUrl = new URL(window.location.href);
+      nextUrl.searchParams.set("state", state);
+      history.replaceState(null, "", nextUrl);
+      window.scrollTo(0, 0);
+    }
+
+    function showToast(message, type = "success") {
+      let stack = document.querySelector(".toast-stack");
+      if (!stack) {
+        stack = document.createElement("div");
+        stack.className = "toast-stack";
+        document.body.appendChild(stack);
+      }
+      const item = document.createElement("div");
+      item.className = `toast-message ${type === "error" ? "error" : ""}`;
+      item.textContent = message;
+      stack.appendChild(item);
+      setTimeout(() => item.remove(), 2200);
+    }
+
+    const mainUpload = document.querySelector("#main .upload-btn");
+    const firstRowOps = document.querySelectorAll("#main .kb-table tbody tr:first-child .ops a");
+    mainUpload?.addEventListener("click", () => activateState("upload"));
+    firstRowOps[0]?.addEventListener("click", () => activateState("view"));
+    firstRowOps[1]?.addEventListener("click", () => {
+      const content = `售后咨询\n来源文件：退货包装示例.docx\n知识点数量：14\n\n--- 知识点 1 ---\n\n用户问题：退货标准包装长什么样？\n\n标准回复：\n请参考以下示例，包装外箱需完整，封口胶带和标签需清晰。\n\n图片：\nhttps://xxx.jdcloud.com/knowledge/20260817/return_example_001.png\nhttps://xxx.jdcloud.com/knowledge/20260817/return_example_002.png`;
+      const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      const now = new Date();
+      const pad = (n) => String(n).padStart(2, "0");
+      link.download = `知识库切片_${now.getFullYear()}${pad(now.getMonth()+1)}${pad(now.getDate())}${pad(now.getHours())}${pad(now.getMinutes())}.txt`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+      showToast("TXT 已导出，图片以 URL 形式保留");
+    });
+
+    document.querySelectorAll(".modal-close, .modal-foot .btn:first-child").forEach((el) => {
+      el.addEventListener("click", () => activateState("main"));
+    });
+
+    document.querySelectorAll("#view .view-toolbar .btn-red, #hover .view-toolbar .btn-red, #search .view-toolbar .btn-red").forEach((el) => {
+      el.addEventListener("click", () => activateState("excel"));
+    });
+
+    document.querySelectorAll("#main .tabs .tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll("#main .tabs .tab").forEach((item) => item.classList.remove("active"));
+        tab.classList.add("active");
+        showToast(`已切换至${tab.textContent.trim()}`);
+      });
+    });
+
+    const mainRows = [...document.querySelectorAll("#main .kb-table tbody tr")];
+    const nameInput = document.querySelector("#main .filters .field:first-child .input");
+    const filterButtons = document.querySelectorAll("#main .filter-actions .btn");
+    if (nameInput) {
+      nameInput.value = "";
+      nameInput.placeholder = "请输入文件名称";
+    }
+    filterButtons[1]?.addEventListener("click", () => {
+      const keyword = (nameInput?.value || "").trim().toLowerCase();
+      mainRows.forEach((row) => row.classList.toggle("filtered-out", keyword && !row.cells[0].textContent.toLowerCase().includes(keyword)));
+      showToast(keyword ? `已按文件名称“${keyword}”筛选` : "已查询全部文档");
+    });
+    filterButtons[0]?.addEventListener("click", () => {
+      if (nameInput) nameInput.value = "";
+      mainRows.forEach((row) => row.classList.remove("filtered-out"));
+      document.querySelectorAll("#main .filters select").forEach((select) => select.selectedIndex = 0);
+      showToast("筛选条件已重置");
+    });
+
+    document.querySelectorAll("#main .switch").forEach((toggle) => {
+      toggle.addEventListener("click", () => {
+        toggle.classList.toggle("on");
+        showToast(toggle.classList.contains("on") ? "文档已启用" : "文档已停用");
+      });
+    });
+
+    const uploadBox = document.querySelector("#upload .upload-box");
+    const uploadChip = document.querySelector("#upload .upload-file-chip");
+    const uploadCategory = document.querySelector("#upload .upload-category");
+    uploadBox?.addEventListener("click", () => {
+      uploadChip?.classList.add("show");
+      document.querySelector("#upload .file-error")?.classList.remove("show");
+    });
+    document.querySelector("#upload .remove-file")?.addEventListener("click", () => uploadChip?.classList.remove("show"));
+    document.querySelector("#upload .upload-confirm")?.addEventListener("click", () => {
+      const missingCategory = !uploadCategory?.value;
+      const missingFile = !uploadChip?.classList.contains("show");
+      document.querySelector("#upload .category-error")?.classList.toggle("show", missingCategory);
+      document.querySelector("#upload .file-error")?.classList.toggle("show", missingFile);
+      if (missingCategory || missingFile) {
+        showToast("请先完善所属分类和上传文件", "error");
+        return;
+      }
+      activateState("main");
+      showToast("文档已提交，系统正在生成知识切片");
+    });
+
+    const viewSearch = document.querySelector("#view .search");
+    if (viewSearch) {
+      const input = document.createElement("input");
+      input.className = "search";
+      input.placeholder = "搜索切片内容";
+      input.setAttribute("aria-label", "搜索切片内容");
+      viewSearch.replaceWith(input);
+      const cards = [...document.querySelectorAll("#view .slice-card")];
+      input.addEventListener("input", () => {
+        const keyword = input.value.trim().toLowerCase();
+        cards.forEach((card) => {
+          card.style.display = !keyword || card.textContent.toLowerCase().includes(keyword) ? "block" : "none";
+        });
+        const count = cards.filter((card) => card.style.display !== "none").length;
+        const total = document.querySelector("#view .view-pager span:first-child");
+        if (total) total.textContent = `共 ${keyword ? count : 14} 条`;
+      });
+    }
+
+    document.querySelectorAll(".img-url").forEach((url) => {
+      url.title = url.textContent.trim();
+    });
+
+    document.querySelectorAll(".txt-titlebar span:last-child, .excel-titlebar span:last-child").forEach((el) => {
+      el.style.cursor = "pointer";
+      el.addEventListener("click", () => activateState("main"));
+    });
+
+    activateState(new URLSearchParams(window.location.search).get("state") || "main");
+  </script>
+</body>
+</html>

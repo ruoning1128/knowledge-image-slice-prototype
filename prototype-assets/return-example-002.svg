@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="760" height="500" viewBox="0 0 760 500">
+  <rect width="760" height="500" fill="#f4f6f8"/>
+  <rect x="36" y="32" width="688" height="436" rx="18" fill="#ffffff" stroke="#d9dde5"/>
+  <rect x="88" y="84" width="584" height="330" rx="14" fill="#eef2f7"/>
+  <rect x="154" y="134" width="452" height="248" rx="10" fill="#ffffff" stroke="#c9ced8"/>
+  <rect x="190" y="174" width="186" height="124" rx="8" fill="#d8b47b"/>
+  <path d="M190 174h186l-34-44H222z" fill="#e2c48f"/>
+  <path d="M376 174l48 34v124l-48-34z" fill="#bd8951"/>
+  <circle cx="506" cy="226" r="44" fill="#e1251b" opacity=".94"/>
+  <path d="M484 226l16 16 32-38" fill="none" stroke="#ffffff" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="380" y="440" text-anchor="middle" font-family="Arial, sans-serif" font-size="28" fill="#222">包装封口与标签示例 002</text>
+</svg>
