@@ -2,12 +2,12 @@
 <!--
 prototype-meta:
   name: 客服知识库图文切片能力
-  version: 1.1.4
-  last-modified: 2026-08-17
+  version: 1.2.0
+  last-modified: 2026-08-18
   page-role: 知识库文档与切片运营
   user-roles: 客服运营人员
   state-machine: main -> upload | view -> search | hover | excel
-  key-flows: 文档筛选、DOCX上传、查看图文切片、URL搜索、图片预览、TXT与Excel导出
+  key-flows: 文档筛选、多文档上传、上传校验、模板下载、查看图文切片、URL搜索、图片预览、TXT与Excel导出
   business-entities: 知识文档、知识切片、图片附件、业务分类
   api-touch-points: 文档列表、文档上传、切片查询、导出任务
   key-features:
@@ -21,6 +21,9 @@ prototype-meta:
     - [x] 一级导航图标上下结构与品牌标志修正
     - [x] 一级导航按独立参考图像素级还原
     - [x] Excel每张图片独占URL与预览单元格
+    - [x] PDF/TXT/DOCX/DOC多文件上传与逐项移除
+    - [x] 所属分类必填校验与上传后处理中列表
+    - [x] Word图文模板及现有格式模板下载
 -->
 <html lang="zh-CN">
 <head>
@@ -554,7 +557,7 @@ prototype-meta:
       place-items: center;
     }
     .upload-modal {
-      width: 448px;
+      width: 520px;
       background: #fff;
       border-radius: 6px;
       box-shadow: 0 12px 34px rgba(0,0,0,.18);
@@ -570,17 +573,17 @@ prototype-meta:
       font-weight: 500;
     }
     .modal-close { color: #c0c4cc; font-size: 18px; }
-    .modal-body { padding: 20px; }
+    .modal-body { padding: 22px 24px 16px; }
     .required { color: #e1251b; margin-right: 4px; }
     .upload-field {
       display: grid;
-      grid-template-columns: 60px 1fr;
-      gap: 10px;
-      margin-bottom: 18px;
+      grid-template-columns: 68px 1fr;
+      gap: 12px;
+      margin-bottom: 20px;
       align-items: start;
     }
     .upload-box {
-      height: 196px;
+      height: 164px;
       border: 1px dashed #dcdfe6;
       border-radius: 4px;
       display: grid;
@@ -600,13 +603,64 @@ prototype-meta:
       margin-top: -8px;
     }
     .help-text strong { color: #333; font-weight: 500; }
+    .upload-box.dragging { border-color: #e1251b; background: #fff8f7; }
+    .upload-input { display: none; }
+    .upload-file-list {
+      grid-column: 2;
+      display: none;
+      border: 1px solid #ebeef2;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: -8px;
+    }
+    .upload-file-list.show { display: block; }
+    .upload-file-item {
+      min-height: 40px;
+      display: grid;
+      grid-template-columns: 38px minmax(0, 1fr) auto;
+      gap: 8px;
+      align-items: center;
+      padding: 7px 10px;
+      border-bottom: 1px solid #f0f1f3;
+    }
+    .upload-file-item:last-child { border-bottom: 0; }
+    .upload-file-item .filetype { min-width: 34px; text-align: center; }
+    .upload-file-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #4a4f57; }
+    .remove-upload-file { color: #e1251b; cursor: pointer; }
+    .upload-category.invalid { border-color: #e1251b; }
+    .template-bar {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 16px;
+      position: relative;
+      color: #7d8794;
+      line-height: 1.55;
+    }
+    .template-download { color: #e1251b; cursor: pointer; white-space: nowrap; text-decoration: none; }
+    .template-menu {
+      display: none;
+      position: absolute;
+      right: 0;
+      bottom: 24px;
+      width: 188px;
+      padding: 6px 0;
+      background: #fff;
+      border: 1px solid #e3e6eb;
+      border-radius: 5px;
+      box-shadow: 0 8px 22px rgba(0,0,0,.14);
+      z-index: 5;
+    }
+    .template-menu.show { display: block; }
+    .template-menu a { display: block; padding: 8px 12px; color: #333; text-decoration: none; }
+    .template-menu a:hover { background: #fff5f4; color: #e1251b; }
     .modal-foot {
       height: 54px;
       display: flex;
       justify-content: flex-end;
       gap: 12px;
       align-items: center;
-      padding: 0 20px 18px;
+      padding: 0 24px 20px;
     }
     .view-modal {
       width: 864px;
@@ -1150,22 +1204,31 @@ prototype-meta:
             </div>
             <div class="upload-field">
               <label><span class="required">*</span>上传文件</label>
-              <div class="upload-box">
+              <div class="upload-box" tabindex="0" role="button" aria-label="选择或拖拽上传文件">
                 <div>
                   <div class="upload-icon">⇧</div>
                   <div style="margin-top:12px;color:#333;">点击或拖拽文件到此处上传</div>
-                  <div style="margin-top:8px;">支持 pdf / txt / word（.docx），单文件不超过 3MB，支持多文件批量上传</div>
+                  <div style="margin-top:8px;">支持 pdf / txt / docx / doc，单文件不超过 3MB，支持多文件批量上传</div>
                 </div>
               </div>
-              <div class="upload-file-chip"><span>退货包装规范.docx</span><a class="remove-file">移除</a></div>
-              <div class="field-error file-error">请选择 PDF、TXT 或 Word（.docx）文件</div>
-              <div class="help-text">如知识文档中包含需要随答案返回的图片，请使用 <strong>Word（.docx）</strong> 格式上传。PDF、TXT 中的图片不进行抽取。</div>
+              <input class="upload-input" type="file" accept=".pdf,.txt,.docx,.doc" multiple>
+              <div class="upload-file-list" aria-live="polite"></div>
+              <div class="field-error file-error">请选择 PDF、TXT、DOCX 或 DOC 文件</div>
+              <div class="help-text">如知识文档中包含图片，请使用 <strong>Word（.docx/.doc）</strong> 上传。</div>
             </div>
-            <div class="muted" style="line-height:1.6;">上传后系统自动切片处理，完成后可查看每个切片内容并单独控制启用状态。</div>
+            <div class="template-bar">
+              <span>上传后系统自动切片处理，完成后可查看每个切片内容并单独控制启用状态。</span>
+              <a class="template-download" data-action="template-toggle">⇩ 下载模板示例</a>
+              <div class="template-menu">
+                <a href="prototype-assets/templates/QA图文格式示例.docx" download>Word 图文格式示例</a>
+                <a href="prototype-assets/templates/QA格式示例.pdf" download>PDF 格式示例</a>
+                <a href="prototype-assets/templates/QA格式示例.txt" download>TXT 格式示例</a>
+                <a href="prototype-assets/templates/QA格式示例.xlsx" download>Excel 格式示例</a>
+              </div>
+            </div>
           </div>
           <div class="modal-foot"><button class="btn" data-action="modal-close">取消</button><button class="btn btn-red upload-confirm" data-action="upload-submit">确定上传</button></div>
         </div>
-        <div class="annotation" style="left:930px;top:292px;">仅扩展格式提示与说明文案，不新增 OCR、多模态识图、图片向量化等配置项。</div>
       </div>
     </div>
   </section>
@@ -1518,24 +1581,85 @@ https://xxx.jdcloud.com/knowledge/20260817/exchange_step_001.png</div>
     });
 
     const uploadBox = document.querySelector("#upload .upload-box");
-    const uploadChip = document.querySelector("#upload .upload-file-chip");
+    const uploadInput = document.querySelector("#upload .upload-input");
+    const uploadList = document.querySelector("#upload .upload-file-list");
     const uploadCategory = document.querySelector("#upload .upload-category");
-    uploadBox?.addEventListener("click", () => {
-      uploadChip?.classList.add("show");
-      document.querySelector("#upload .file-error")?.classList.remove("show");
+    const templateToggle = document.querySelector("#upload .template-download");
+    const templateMenu = document.querySelector("#upload .template-menu");
+    let uploadFiles = [];
+
+    function fileType(name) {
+      const ext = name.split(".").pop().toUpperCase();
+      return ["PDF", "TXT", "DOCX", "DOC"].includes(ext) ? ext : "FILE";
+    }
+
+    function renderUploadFiles() {
+      if (!uploadList) return;
+      uploadList.innerHTML = uploadFiles.map((file, index) => `<div class="upload-file-item"><span class="filetype ${fileType(file.name).toLowerCase()}">${fileType(file.name)}</span><span class="upload-file-name" title="${file.name}">${file.name}</span><a class="remove-upload-file" data-index="${index}">移除</a></div>`).join("");
+      uploadList.classList.toggle("show", uploadFiles.length > 0);
+      document.querySelector("#upload .file-error")?.classList.toggle("show", false);
+    }
+
+    function addUploadFiles(files) {
+      const allowed = /\.(pdf|txt|docx|doc)$/i;
+      const valid = [...files].filter((file) => allowed.test(file.name));
+      const rejected = files.length - valid.length;
+      valid.forEach((file) => {
+        if (!uploadFiles.some((item) => item.name === file.name && item.size === file.size)) uploadFiles.push(file);
+      });
+      renderUploadFiles();
+      if (rejected) showToast(`已忽略 ${rejected} 个不支持的文件`, "error");
+    }
+
+    uploadBox?.addEventListener("click", () => uploadInput?.click());
+    uploadBox?.addEventListener("keydown", (event) => {
+      if (event.key === "Enter" || event.key === " ") uploadInput?.click();
     });
-    document.querySelector("#upload .remove-file")?.addEventListener("click", () => uploadChip?.classList.remove("show"));
+    uploadInput?.addEventListener("change", () => addUploadFiles(uploadInput.files || []));
+    ["dragenter", "dragover"].forEach((name) => uploadBox?.addEventListener(name, (event) => {
+      event.preventDefault();
+      uploadBox.classList.add("dragging");
+    }));
+    ["dragleave", "drop"].forEach((name) => uploadBox?.addEventListener(name, (event) => {
+      event.preventDefault();
+      uploadBox.classList.remove("dragging");
+    }));
+    uploadBox?.addEventListener("drop", (event) => addUploadFiles(event.dataTransfer?.files || []));
+    uploadList?.addEventListener("click", (event) => {
+      const target = event.target.closest(".remove-upload-file");
+      if (!target) return;
+      uploadFiles.splice(Number(target.dataset.index), 1);
+      renderUploadFiles();
+    });
+    uploadCategory?.addEventListener("change", () => {
+      uploadCategory.classList.remove("invalid");
+      document.querySelector("#upload .category-error")?.classList.remove("show");
+    });
+    templateToggle?.addEventListener("click", () => templateMenu?.classList.toggle("show"));
+    templateMenu?.addEventListener("click", () => templateMenu.classList.remove("show"));
     document.querySelector("#upload .upload-confirm")?.addEventListener("click", () => {
       const missingCategory = !uploadCategory?.value;
-      const missingFile = !uploadChip?.classList.contains("show");
+      const missingFile = uploadFiles.length === 0;
+      uploadCategory?.classList.toggle("invalid", missingCategory);
       document.querySelector("#upload .category-error")?.classList.toggle("show", missingCategory);
       document.querySelector("#upload .file-error")?.classList.toggle("show", missingFile);
       if (missingCategory || missingFile) {
         showToast("请先完善所属分类和上传文件", "error");
         return;
       }
+      const tbody = document.querySelector("#main .kb-table tbody");
+      uploadFiles.slice().reverse().forEach((file) => {
+        const row = document.createElement("tr");
+        row.className = "processing-row";
+        row.innerHTML = `<td><span class="filetype ${fileType(file.name).toLowerCase()}">${fileType(file.name)}</span>${file.name}</td><td><span class="tag">${uploadCategory.value}</span></td><td>-</td><td>-</td><td>-</td><td><span style="color:#1677ff">● 处理中</span></td><td>刘儒宁</td><td>2026-08-18 ${new Date().toTimeString().slice(0,5)}</td><td><span class="switch"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>`;
+        tbody?.prepend(row);
+      });
+      const count = uploadFiles.length;
+      uploadFiles = [];
+      renderUploadFiles();
+      if (uploadInput) uploadInput.value = "";
       activateState("main");
-      showToast("文档已提交，系统正在生成知识切片");
+      showToast(`已提交 ${count} 个文档，系统正在生成知识切片`);
     });
 
     const viewSearch = document.querySelector("#view .search");
