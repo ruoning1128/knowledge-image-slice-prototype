@@ -2,7 +2,7 @@
 <!--
 prototype-meta:
   name: 客服知识库图文切片能力
-  version: 1.2.0
+  version: 1.2.1
   last-modified: 2026-08-18
   page-role: 知识库文档与切片运营
   user-roles: 客服运营人员
@@ -11,7 +11,7 @@ prototype-meta:
   business-entities: 知识文档、知识切片、图片附件、业务分类
   api-touch-points: 文档列表、文档上传、切片查询、导出任务
   key-features:
-    - [x] 主表图片切片数
+    - [x] 主表保持现有业务字段（不展示独立图片统计列）
     - [x] DOCX图片抽取提示
     - [x] 图片URL截断与多图顺序
     - [x] URL悬浮预览
@@ -24,6 +24,7 @@ prototype-meta:
     - [x] PDF/TXT/DOCX/DOC多文件上传与逐项移除
     - [x] 所属分类必填校验与上传后处理中列表
     - [x] Word图文模板及现有格式模板下载
+    - [x] 分类、状态、启用开关组合筛选
 -->
 <html lang="zh-CN">
 <head>
@@ -1132,50 +1133,49 @@ prototype-meta:
           </div>
           <div class="filters">
             <label class="field"><span>文件名称</span><input class="input" value="请输入文件名称"></label>
-            <label class="field"><span>所属分类</span><select class="select"><option>请选择所属分类</option></select></label>
-            <label class="field"><span>状态</span><select class="select"><option>请选择状态</option></select></label>
-            <label class="field"><span>启用开关</span><select class="select"><option>请选择启用开关</option></select></label>
+            <label class="field"><span>所属分类</span><select class="select category-filter"><option value="">请选择所属分类</option><option>商品咨询</option><option>活动咨询</option><option>购买咨询</option><option>物流咨询</option><option>售后咨询</option><option>其他</option></select></label>
+            <label class="field"><span>状态</span><select class="select status-filter"><option value="">请选择状态</option><option>待处理</option><option>处理中</option><option>已生效</option><option>处理失败</option></select></label>
+            <label class="field"><span>启用开关</span><select class="select enabled-filter"><option value="">请选择启用开关</option><option value="enabled">已启用</option><option value="disabled">已禁用</option></select></label>
             <div></div>
             <div class="filter-actions"><button class="btn" data-action="filter-reset">重置</button><button class="btn btn-red-outline" data-action="filter-submit">搜索</button></div>
           </div>
           <div class="upload-row"><button class="upload-btn" data-action="upload-open">＋ 上传文件</button></div>
           <table class="kb-table">
             <colgroup>
-              <col style="width:16%"><col style="width:8%"><col style="width:7%"><col style="width:9%"><col style="width:7%"><col style="width:8%"><col style="width:8%"><col style="width:12%"><col style="width:8%"><col style="width:17%">
+              <col style="width:18%"><col style="width:9%"><col style="width:8%"><col style="width:8%"><col style="width:9%"><col style="width:9%"><col style="width:13%"><col style="width:9%"><col style="width:17%">
             </colgroup>
             <thead>
               <tr>
-                <th>文件名称</th><th>所属分类</th><th>切片数</th><th>图片切片数</th><th>已启用</th><th>状态</th><th>上传人</th><th>上传时间</th><th>启用开关</th><th>操作</th>
+                <th>文件名称</th><th>所属分类</th><th>切片数</th><th>已启用</th><th>状态</th><th>上传人</th><th>上传时间</th><th>启用开关</th><th>操作</th>
               </tr>
             </thead>
             <tbody>
               <tr>
-                <td><span class="filetype docx">DOCX</span>退货包装示例.docx</td><td><span class="tag">售后咨询</span></td><td>14</td><td>5</td><td>14</td><td><span class="status-ok">● 已生效</span></td><td>高腾</td><td>2026-08-17 13:51</td><td><span class="switch on"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>
+                <td><span class="filetype docx">DOCX</span>退货包装示例.docx</td><td><span class="tag">售后咨询</span></td><td>14</td><td>14</td><td><span class="status-ok">● 已生效</span></td><td>高腾</td><td>2026-08-17 13:51</td><td><span class="switch on"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>
               </tr>
               <tr>
-                <td><span class="filetype">TXT</span>QA格式0708.txt</td><td><span class="tag">售后咨询</span></td><td>2</td><td>0</td><td>2</td><td><span class="status-ok">● 已生效</span></td><td>zyj_dev</td><td>2026-07-08 11:36</td><td><span class="switch on"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>
+                <td><span class="filetype">TXT</span>QA格式0708.txt</td><td><span class="tag">售后咨询</span></td><td>2</td><td>2</td><td><span class="status-ok">● 已生效</span></td><td>zyj_dev</td><td>2026-07-08 11:36</td><td><span class="switch on"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>
               </tr>
               <tr class="warn">
-                <td><span class="filetype pdf">PDF</span>c14fe7b5ddb749b4.pdf</td><td><span class="tag">售后咨询</span></td><td>7</td><td>0</td><td>7</td><td><span class="status-ok">● 已生效</span></td><td>zyj_dev</td><td>2026-07-08 11:32</td><td><span class="switch on"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>
+                <td><span class="filetype pdf">PDF</span>c14fe7b5ddb749b4.pdf</td><td><span class="tag">售后咨询</span></td><td>7</td><td>7</td><td><span class="status-ok">● 已生效</span></td><td>zyj_dev</td><td>2026-07-08 11:32</td><td><span class="switch on"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>
               </tr>
               <tr>
-                <td><span class="filetype">TXT</span>账户管理_登录与注册.txt</td><td><span class="tag green">其他</span></td><td>15</td><td>0</td><td>15</td><td><span class="status-ok">● 已生效</span></td><td>运营人员</td><td>2026-07-07 16:55</td><td><span class="switch on"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>
+                <td><span class="filetype">TXT</span>账户管理_登录与注册.txt</td><td><span class="tag green">其他</span></td><td>15</td><td>15</td><td><span class="status-ok">● 已生效</span></td><td>运营人员</td><td>2026-07-07 16:55</td><td><span class="switch on"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>
               </tr>
               <tr>
-                <td><span class="filetype pdf">PDF</span>删除-朋友圈相关.pdf</td><td><span class="tag orange">活动咨询</span></td><td>16</td><td>0</td><td>-</td><td><span class="status-ok">● 已生效</span></td><td>田田</td><td>2026-06-24 18:58</td><td><span class="switch"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>
+                <td><span class="filetype pdf">PDF</span>删除-朋友圈相关.pdf</td><td><span class="tag orange">活动咨询</span></td><td>16</td><td>-</td><td><span class="status-ok">● 已生效</span></td><td>田田</td><td>2026-06-24 18:58</td><td><span class="switch"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>
               </tr>
               <tr>
-                <td><span class="filetype pdf">PDF</span>群模板功能0324.pdf</td><td><span class="tag blue">购买咨询</span></td><td>15</td><td>0</td><td>15</td><td><span class="status-ok">● 已生效</span></td><td>田田</td><td>2026-06-24 18:57</td><td><span class="switch on"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>
+                <td><span class="filetype pdf">PDF</span>群模板功能0324.pdf</td><td><span class="tag blue">购买咨询</span></td><td>15</td><td>15</td><td><span class="status-ok">● 已生效</span></td><td>田田</td><td>2026-06-24 18:57</td><td><span class="switch on"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>
               </tr>
               <tr>
-                <td><span class="filetype pdf">PDF</span>【上线公告】V3.42.0.pdf</td><td><span class="tag purple">物流咨询</span></td><td>9</td><td>0</td><td>9</td><td><span class="status-ok">● 已生效</span></td><td>田田</td><td>2026-06-23 17:09</td><td><span class="switch on"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>
+                <td><span class="filetype pdf">PDF</span>【上线公告】V3.42.0.pdf</td><td><span class="tag purple">物流咨询</span></td><td>9</td><td>9</td><td><span class="status-ok">● 已生效</span></td><td>田田</td><td>2026-06-23 17:09</td><td><span class="switch on"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>
               </tr>
               <tr>
-                <td><span class="filetype">TXT</span>测试5.txt</td><td><span class="tag" style="color:#00a2a8;background:#e7ffff">商品咨询</span></td><td>3</td><td>0</td><td>3</td><td><span class="status-ok">● 已生效</span></td><td>运营人员</td><td>2026-06-18 11:03</td><td><span class="switch on"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>
+                <td><span class="filetype">TXT</span>测试5.txt</td><td><span class="tag" style="color:#00a2a8;background:#e7ffff">商品咨询</span></td><td>3</td><td>3</td><td><span class="status-ok">● 已生效</span></td><td>运营人员</td><td>2026-06-18 11:03</td><td><span class="switch on"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>
               </tr>
             </tbody>
           </table>
-          <div class="annotation" style="left:610px;top:424px;">新增“图片切片数”列，仅统计包含图片附件的切片数量；纯文字、PDF、TXT 图片均显示 0。</div>
           <div class="annotation" style="right:170px;bottom:56px;">主页面“下载”仍导出 TXT，文件名按当前分钟：知识库切片_202608171351.txt；含图知识点只追加 URL，不嵌入图片。</div>
           <div class="pager"><span>共 33 条</span><span class="page-box">‹</span><span class="page-box active">1</span><span class="page-box">2</span><span class="page-box">3</span><span class="page-box">4</span><span class="page-box">›</span><span class="page-box" style="width:76px">10条/页</span><span>前往</span><span class="page-box">1</span><span>页</span></div>
           <div class="watermark">预发环境</div>
@@ -1436,7 +1436,7 @@ https://xxx.jdcloud.com/knowledge/20260817/exchange_step_001.png</div>
         <div class="constraints-title">原型约束清单</div>
         <div class="muted">根据 all_details.json 中可抽取的平台习惯收敛：字段可追踪、状态可排查、输出可复现、通知/导出模板化。以下为本原型需要遵守的研发落地口径。</div>
         <div class="constraint-grid">
-          <div class="constraint-card"><strong>字段可追踪</strong><div class="muted">主表保留来源文件、分类、切片数、图片切片数、状态、上传人、上传时间；切片内保留图片 URL 原文。</div></div>
+          <div class="constraint-card"><strong>字段可追踪</strong><div class="muted">主表保留来源文件、分类、切片数、状态、上传人、上传时间；切片内保留图片 URL 原文。</div></div>
           <div class="constraint-card"><strong>状态可排查</strong><div class="muted">沿用现有状态与启用开关，不新增图片专属状态；图片能力作为切片附件能力呈现。</div></div>
           <div class="constraint-card"><strong>搜索可命中</strong><div class="muted">搜索字段覆盖用户问题、标准回复、图片 URL，支持完整 URL 或片段检索。</div></div>
           <div class="constraint-card"><strong>导出可复现</strong><div class="muted">TXT/Excel 均按当前分钟命名；TXT 导出 URL，Excel 同时导出 URL 与缩略图。</div></div>
@@ -1554,8 +1554,10 @@ https://xxx.jdcloud.com/knowledge/20260817/exchange_step_001.png</div>
       });
     });
 
-    const mainRows = [...document.querySelectorAll("#main .kb-table tbody tr")];
     const nameInput = document.querySelector("#main .filters .field:first-child .input");
+    const categoryFilter = document.querySelector("#main .category-filter");
+    const statusFilter = document.querySelector("#main .status-filter");
+    const enabledFilter = document.querySelector("#main .enabled-filter");
     const filterButtons = document.querySelectorAll("#main .filter-actions .btn");
     if (nameInput) {
       nameInput.value = "";
@@ -1563,12 +1565,24 @@ https://xxx.jdcloud.com/knowledge/20260817/exchange_step_001.png</div>
     }
     filterButtons[1]?.addEventListener("click", () => {
       const keyword = (nameInput?.value || "").trim().toLowerCase();
-      mainRows.forEach((row) => row.classList.toggle("filtered-out", keyword && !row.cells[0].textContent.toLowerCase().includes(keyword)));
-      showToast(keyword ? `已按文件名称“${keyword}”筛选` : "已查询全部文档");
+      const category = categoryFilter?.value || "";
+      const status = statusFilter?.value || "";
+      const enabled = enabledFilter?.value || "";
+      const rows = [...document.querySelectorAll("#main .kb-table tbody tr")];
+      rows.forEach((row) => {
+        const nameMatched = !keyword || row.cells[0].textContent.toLowerCase().includes(keyword);
+        const categoryMatched = !category || row.cells[1].textContent.trim() === category;
+        const statusMatched = !status || row.cells[4].textContent.includes(status);
+        const isEnabled = row.cells[7].querySelector(".switch")?.classList.contains("on");
+        const enabledMatched = !enabled || (enabled === "enabled" ? isEnabled : !isEnabled);
+        row.classList.toggle("filtered-out", !(nameMatched && categoryMatched && statusMatched && enabledMatched));
+      });
+      const activeCount = rows.filter((row) => !row.classList.contains("filtered-out")).length;
+      showToast(`已查询到 ${activeCount} 个文档`);
     });
     filterButtons[0]?.addEventListener("click", () => {
       if (nameInput) nameInput.value = "";
-      mainRows.forEach((row) => row.classList.remove("filtered-out"));
+      document.querySelectorAll("#main .kb-table tbody tr").forEach((row) => row.classList.remove("filtered-out"));
       document.querySelectorAll("#main .filters select").forEach((select) => select.selectedIndex = 0);
       showToast("筛选条件已重置");
     });
@@ -1651,7 +1665,7 @@ https://xxx.jdcloud.com/knowledge/20260817/exchange_step_001.png</div>
       uploadFiles.slice().reverse().forEach((file) => {
         const row = document.createElement("tr");
         row.className = "processing-row";
-        row.innerHTML = `<td><span class="filetype ${fileType(file.name).toLowerCase()}">${fileType(file.name)}</span>${file.name}</td><td><span class="tag">${uploadCategory.value}</span></td><td>-</td><td>-</td><td>-</td><td><span style="color:#1677ff">● 处理中</span></td><td>刘儒宁</td><td>2026-08-18 ${new Date().toTimeString().slice(0,5)}</td><td><span class="switch"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>`;
+        row.innerHTML = `<td><span class="filetype ${fileType(file.name).toLowerCase()}">${fileType(file.name)}</span>${file.name}</td><td><span class="tag">${uploadCategory.value}</span></td><td>-</td><td>-</td><td><span style="color:#1677ff">● 处理中</span></td><td>刘偌宁</td><td>2026-08-18 ${new Date().toTimeString().slice(0,5)}</td><td><span class="switch"></span></td><td class="ops"><a>查看</a><a>下载</a><a>改分类</a><a>删除</a></td>`;
         tbody?.prepend(row);
       });
       const count = uploadFiles.length;
