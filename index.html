@@ -2,7 +2,7 @@
 <!--
 prototype-meta:
   name: 客服知识库图文切片能力
-  version: 1.3.2
+  version: 1.3.3
   last-modified: 2026-08-18
   page-role: 知识库文档与切片运营
   user-roles: 客服运营人员
@@ -31,6 +31,7 @@ prototype-meta:
     - [x] 下载切片内容直接下载指定Excel示例
     - [x] 左侧导航选中智能客服知识库
     - [x] 上传与切片预览新增能力标识
+    - [x] 上传格式、图片说明与模板下载修改标识
 -->
 <html lang="zh-CN">
 <head>
@@ -582,7 +583,8 @@ prototype-meta:
     .modal-close { color: #c0c4cc; font-size: 18px; }
     .modal-body { padding: 22px 24px 16px; }
     .required { color: #e1251b; margin-right: 4px; }
-    .feature-new-badge {
+    .feature-new-badge,
+    .feature-change-badge {
       display: inline-flex;
       align-items: center;
       height: 18px;
@@ -597,6 +599,9 @@ prototype-meta:
       line-height: 16px;
       vertical-align: 1px;
     }
+    .feature-change-badge { margin-left: 0; margin-right: 6px; }
+    .format-change-badge { position: absolute; left: -54px; top: 105px; margin: 0; }
+    .help-change-badge { position: absolute; left: -54px; top: 0; margin: 0; }
     .upload-field {
       display: grid;
       grid-template-columns: 68px 1fr;
@@ -624,6 +629,7 @@ prototype-meta:
       color: #7d8794;
       line-height: 1.55;
       margin-top: -8px;
+      position: relative;
     }
     .help-text strong { color: #333; font-weight: 500; }
     .upload-box.dragging { border-color: #e1251b; background: #fff8f7; }
@@ -1280,6 +1286,7 @@ prototype-meta:
               <label><span class="required">*</span>上传文件</label>
               <div class="upload-box" tabindex="0" role="button" aria-label="选择或拖拽上传文件">
                 <span class="feature-new-badge" style="position:absolute;top:10px;right:10px;">新增</span>
+                <span class="feature-change-badge format-change-badge">修改</span>
                 <div>
                   <div class="upload-icon">⇧</div>
                   <div style="margin-top:12px;color:#333;">点击或拖拽文件到此处上传</div>
@@ -1289,11 +1296,11 @@ prototype-meta:
               <input class="upload-input" type="file" accept=".pdf,.txt,.docx,.doc" multiple>
               <div class="upload-file-list" aria-live="polite"></div>
               <div class="field-error file-error">请选择 PDF、TXT、DOCX 或 DOC 文件</div>
-              <div class="help-text">如知识文档中包含图片，请使用 <strong>Word（.docx/.doc）</strong> 上传。</div>
+              <div class="help-text"><span class="feature-change-badge help-change-badge">修改</span>如知识文档中包含图片，请使用 <strong>Word（.docx/.doc）</strong> 上传。</div>
             </div>
             <div class="template-bar">
               <span>上传后系统自动切片处理，完成后可查看每个切片内容并单独控制启用状态。</span>
-              <a class="template-download" data-action="template-toggle">⇩ 下载模板示例</a>
+              <a class="template-download" data-action="template-toggle"><span class="feature-change-badge">修改</span>⇩ 下载模板示例</a>
               <div class="template-menu">
                 <a href="prototype-assets/templates/QA图文格式示例.docx" download>Word 图文格式示例</a>
                 <a href="prototype-assets/templates/QA格式示例.pdf" download>PDF 格式示例</a>
