@@ -2,7 +2,7 @@
 <!--
 prototype-meta:
   name: 客服知识库图文切片能力
-  version: 1.3.0
+  version: 1.3.1
   last-modified: 2026-08-18
   page-role: 知识库文档与切片运营
   user-roles: 客服运营人员
@@ -27,6 +27,8 @@ prototype-meta:
     - [x] 分类、状态、启用开关组合筛选
     - [x] 切片卡片一级Hover展开完整内容并支持滚动
     - [x] 完整内容内图片URL二级Hover预览
+    - [x] 默认进入知识库主页面
+    - [x] 下载切片内容直接下载指定Excel示例
 -->
 <html lang="zh-CN">
 <head>
@@ -1609,8 +1611,16 @@ https://xxx.jdcloud.com/knowledge/20260817/exchange_step_001.png</div>
       el.addEventListener("click", () => activateState("main"));
     });
 
-    document.querySelectorAll("#view .view-toolbar .btn-red, #hover .view-toolbar .btn-red, #search .view-toolbar .btn-red").forEach((el) => {
-      el.addEventListener("click", () => activateState("excel"));
+    document.querySelectorAll("[data-action='excel-preview']").forEach((el) => {
+      el.addEventListener("click", () => {
+        const link = document.createElement("a");
+        link.href = "prototype-assets/downloads/下载示例.xlsx";
+        link.download = "下载示例.xlsx";
+        document.body.appendChild(link);
+        link.click();
+        link.remove();
+        showToast("下载切片内容已开始");
+      });
     });
 
     document.querySelectorAll("#main .tabs .tab").forEach((tab) => {
@@ -1807,7 +1817,7 @@ https://xxx.jdcloud.com/knowledge/20260817/exchange_step_001.png</div>
       el.addEventListener("click", () => activateState("main"));
     });
 
-    activateState(new URLSearchParams(window.location.search).get("state") || "main");
+    activateState("main");
   </script>
 </body>
 </html>
