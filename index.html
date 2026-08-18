@@ -2,12 +2,12 @@
 <!--
 prototype-meta:
   name: 客服知识库图文切片能力
-  version: 1.2.1
+  version: 1.3.0
   last-modified: 2026-08-18
   page-role: 知识库文档与切片运营
   user-roles: 客服运营人员
   state-machine: main -> upload | view -> search | hover | excel
-  key-flows: 文档筛选、多文档上传、上传校验、模板下载、查看图文切片、URL搜索、图片预览、TXT与Excel导出
+  key-flows: 文档筛选、多文档上传、上传校验、模板下载、查看图文切片、切片完整内容悬浮、URL二级悬浮预览、URL搜索、TXT与Excel导出
   business-entities: 知识文档、知识切片、图片附件、业务分类
   api-touch-points: 文档列表、文档上传、切片查询、导出任务
   key-features:
@@ -25,6 +25,8 @@ prototype-meta:
     - [x] 所属分类必填校验与上传后处理中列表
     - [x] Word图文模板及现有格式模板下载
     - [x] 分类、状态、启用开关组合筛选
+    - [x] 切片卡片一级Hover展开完整内容并支持滚动
+    - [x] 完整内容内图片URL二级Hover预览
 -->
 <html lang="zh-CN">
 <head>
@@ -707,6 +709,8 @@ prototype-meta:
       position: relative;
       background: #fff;
     }
+    #view .slice-card { cursor: default; transition: border-color .16s, box-shadow .16s; }
+    #view .slice-card:hover { border-color: #f3a39d; box-shadow: 0 2px 8px rgba(225,37,27,.08); }
     .slice-card h4 {
       margin: 0 0 12px;
       font-size: 13px;
@@ -770,6 +774,56 @@ prototype-meta:
       height: auto;
       object-fit: contain;
     }
+    .slice-full-content { display: none; }
+    .slice-hover-panel {
+      position: absolute;
+      z-index: 18;
+      width: 620px;
+      max-height: 430px;
+      background: #fff;
+      border: 1px solid #dfe3e8;
+      border-radius: 6px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.18);
+      overflow: hidden;
+      display: none;
+    }
+    .slice-hover-panel.show { display: block; }
+    .slice-hover-head {
+      height: 42px;
+      padding: 0 16px;
+      border-bottom: 1px solid #edf0f5;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-weight: 600;
+      color: #262626;
+    }
+    .slice-hover-head .muted { font-weight: 400; }
+    .slice-hover-scroll {
+      max-height: 386px;
+      overflow-y: scroll;
+      padding: 14px 24px 18px 16px;
+      line-height: 1.75;
+      scrollbar-width: auto;
+      scrollbar-color: #9fa3a9 #f1f2f4;
+    }
+    .slice-hover-scroll::-webkit-scrollbar { width: 12px; }
+    .slice-hover-scroll::-webkit-scrollbar-track { background: #f1f2f4; border-radius: 7px; }
+    .slice-hover-scroll::-webkit-scrollbar-thumb { background: #9fa3a9; border: 3px solid #f1f2f4; border-radius: 7px; }
+    .slice-hover-scroll .full-label { color: #595959; font-weight: 600; margin-top: 10px; }
+    .slice-hover-scroll .full-label:first-child { margin-top: 0; }
+    .slice-hover-panel .url-row { width: 100%; }
+    .slice-hover-panel .img-url { max-width: 468px; }
+    .slice-hover-panel .preview-pop {
+      left: auto;
+      right: 4px;
+      top: auto;
+      bottom: 30px;
+      width: 300px;
+      max-height: 232px;
+      z-index: 30;
+    }
+    .slice-hover-panel .preview-pop img { max-width: 282px; max-height: 214px; }
     .view-pager {
       height: 58px;
       border-top: 1px solid #edf0f5;
@@ -1259,6 +1313,19 @@ prototype-meta:
               <div class="slice-meta">--- 知识点 2 ---<br>用户问题：退货标准包装长什么样？<br>标准回复：请参考以下示例，包装外箱需完整，封口胶带和标签需清晰。</div>
               <div class="url-row"><span class="url-label">图片 URL 1：</span><a class="img-url">https://xxx.jdcloud.com/knowledge/20260817/return_example_001.png</a><div class="preview-pop"><img src="prototype-assets/return-example-001.svg" alt="退货标准包装示例"></div></div>
               <div class="url-row"><span class="url-label">图片 URL 2：</span><a class="img-url">https://xxx.jdcloud.com/knowledge/20260817/return_example_002.png</a><div class="preview-pop"><img src="prototype-assets/return-example-002.svg" alt="包装封口与标签示例"></div></div>
+              <div class="slice-full-content">
+                <div class="full-label">用户问题</div>
+                <div>退货标准包装长什么样？商品原包装已经拆开，重新装箱时需要注意哪些要求？</div>
+                <div class="full-label">标准回复</div>
+                <div>请参考以下退货包装示例：包装外箱需保持完整，无明显破损、挤压或受潮；商品本体、原包装、说明书、配件及赠品应一并放回。请使用胶带完整封箱，并确保商品标签、订单信息及退货面单清晰可见。易碎商品请补充缓冲材料，避免运输途中发生碰撞。如原包装无法继续使用，请选择尺寸合适的外箱重新包装，不要直接在商品包装盒表面粘贴物流面单。</div>
+                <div class="full-label">补充说明</div>
+                <div>寄出前建议从外箱正面、封口位置和标签位置分别拍照留存。若包装或配件缺失，仓库验收后可能影响退货结果。以下图片顺序与原知识文档保持一致。</div>
+                <div class="full-label">图片附件</div>
+                <div class="url-row"><span class="url-label">图片 URL 1：</span><a class="img-url">https://xxx.jdcloud.com/knowledge/20260817/return_example_001.png</a><div class="preview-pop"><img src="prototype-assets/return-example-001.svg" alt="退货标准包装示例"></div></div>
+                <div class="url-row"><span class="url-label">图片 URL 2：</span><a class="img-url">https://xxx.jdcloud.com/knowledge/20260817/return_example_002.png</a><div class="preview-pop"><img src="prototype-assets/return-example-002.svg" alt="包装封口与标签示例"></div></div>
+                <div class="full-label">知识来源</div>
+                <div>售后咨询 / 退货包装示例.docx / 切片 #2</div>
+              </div>
             </div>
             <div class="slice-card">
               <h4>切片 #3</h4>
@@ -1698,6 +1765,42 @@ https://xxx.jdcloud.com/knowledge/20260817/exchange_step_001.png</div>
     document.querySelectorAll(".img-url").forEach((url) => {
       url.title = url.textContent.trim();
     });
+
+    const viewModal = document.querySelector("#view .view-modal");
+    const hoverPanel = document.createElement("div");
+    hoverPanel.className = "slice-hover-panel";
+    hoverPanel.innerHTML = `<div class="slice-hover-head"><span>完整切片内容</span><span class="muted">内容过长时可在右侧滚动</span></div><div class="slice-hover-scroll"></div>`;
+    viewModal?.appendChild(hoverPanel);
+    const hoverScroll = hoverPanel.querySelector(".slice-hover-scroll");
+    let hoverCloseTimer;
+
+    function closeSliceHover() {
+      clearTimeout(hoverCloseTimer);
+      hoverCloseTimer = setTimeout(() => hoverPanel.classList.remove("show"), 160);
+    }
+
+    function openSliceHover(card) {
+      clearTimeout(hoverCloseTimer);
+      const full = card.querySelector(".slice-full-content");
+      const fallback = [...card.children].filter((node) => !node.classList.contains("slice-actions") && !node.classList.contains("slice-full-content")).map((node) => node.outerHTML).join("");
+      hoverScroll.innerHTML = full ? full.innerHTML : fallback;
+      hoverScroll.scrollTop = 0;
+      hoverScroll.querySelectorAll(".img-url").forEach((url) => { url.title = url.textContent.trim(); });
+      const modalRect = viewModal.getBoundingClientRect();
+      const cardRect = card.getBoundingClientRect();
+      const panelHeight = 430;
+      const preferredTop = cardRect.top - modalRect.top + 10;
+      hoverPanel.style.top = `${Math.max(82, Math.min(preferredTop, modalRect.height - panelHeight - 62))}px`;
+      hoverPanel.style.right = "22px";
+      hoverPanel.classList.add("show");
+    }
+
+    document.querySelectorAll("#view .slice-card").forEach((card) => {
+      card.addEventListener("mouseenter", () => openSliceHover(card));
+      card.addEventListener("mouseleave", closeSliceHover);
+    });
+    hoverPanel.addEventListener("mouseenter", () => clearTimeout(hoverCloseTimer));
+    hoverPanel.addEventListener("mouseleave", closeSliceHover);
 
     document.querySelectorAll(".txt-titlebar span:last-child, .excel-titlebar span:last-child").forEach((el) => {
       el.style.cursor = "pointer";
